@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rate Card Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c28;
+    --border: #2a2a3d;
+    --accent: #ff6b35;
+    --accent2: #ffd166;
+    --text: #f0f0f8;
+    --muted: #6b6b8a;
+    --success: #06d6a0;
+    --card-shadow: 0 4px 32px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Sora', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,107,53,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,107,53,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 0 20px rgba(255,107,53,0.4);
+  }
+  .logo-text { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+  .logo-sub { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 1px; }
+  .badge {
+    background: rgba(255,107,53,0.12);
+    border: 1px solid rgba(255,107,53,0.3);
+    color: var(--accent);
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* LAYOUT */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* PANEL */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: var(--card-shadow);
+  }
+  .panel-label {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-label::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+  }
+
+  /* FORM FIELDS */
+  .field { margin-bottom: 20px; }
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  input[type="number"], select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    padding: 13px 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  input[type="number"]:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255,107,53,0.12);
+  }
+
+  input[type="number"]::placeholder { color: var(--muted); }
+
+  /* Custom select arrow */
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent);
+    pointer-events: none;
+    font-size: 14px;
+  }
+
+  select option { background: #1c1c28; }
+
+  /* WEIGHT display */
+  .weight-display {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 13px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    color: var(--accent2);
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+  }
+  .weight-display.empty { color: var(--muted); font-size: 13px; }
+
+  /* CALCULATE BUTTON */
+  .calc-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Sora', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 15px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    margin-top: 8px;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    box-shadow: 0 4px 20px rgba(255,107,53,0.35);
+  }
+  .calc-btn:hover {
+    background: #ff8055;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(255,107,53,0.5);
+  }
+  .calc-btn:active { transform: translateY(0); }
+
+  /* OUTPUT PANEL */
+  .output-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: var(--card-shadow);
+    position: sticky;
+    top: 24px;
+  }
+
+  .result-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+  .result-empty .icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+  .result-empty p { font-size: 13px; line-height: 1.6; }
+
+  .result-content { display: none; }
+  .result-content.visible { display: block; animation: fadeUp 0.3s ease; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Big price display */
+  .price-display {
+    background: linear-gradient(135deg, rgba(255,107,53,0.1), rgba(255,209,102,0.08));
+    border: 1px solid rgba(255,107,53,0.25);
+    border-radius: 16px;
+    padding: 28px 24px;
+    text-align: center;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .price-display::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,107,53,0.15), transparent 70%);
+  }
+  .price-label { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+  .price-value {
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -2px;
+    line-height: 1;
+    font-family: 'Sora', sans-serif;
+  }
+  .price-value .currency { font-size: 24px; vertical-align: top; margin-top: 8px; margin-right: 4px; font-weight: 400; opacity: 0.7; }
+  .price-gst { font-size: 11px; color: var(--muted); margin-top: 8px; font-family: 'DM Mono', monospace; }
+
+  /* Detail rows */
+  .detail-grid { display: grid; gap: 10px; }
+  .detail-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .detail-key { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-family: 'DM Mono', monospace; }
+  .detail-val { font-size: 13px; font-weight: 600; color: var(--text); font-family: 'DM Mono', monospace; }
+  .detail-val.accent { color: var(--accent2); }
+
+  /* Slab breakdown */
+  .slab-breakdown {
+    margin-top: 20px;
+    background: var(--surface2);
+    border-radius: 14px;
+    padding: 16px;
+    border: 1px solid var(--border);
+  }
+  .slab-title { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+  .slab-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .slab-row:last-child { border-bottom: none; }
+  .slab-row-label { font-size: 12px; color: var(--muted); }
+  .slab-row-val { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--text); }
+
+  /* ERROR */
+  .error-msg {
+    background: rgba(255,80,80,0.1);
+    border: 1px solid rgba(255,80,80,0.3);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: #ff6666;
+    font-size: 13px;
+    margin-top: 8px;
+    display: none;
+  }
+  .error-msg.show { display: block; animation: fadeUp 0.2s ease; }
+
+  /* MOBILE */
+  @media (max-width: 720px) {
+    header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .main-grid { grid-template-columns: 1fr; }
+    .output-panel { position: static; }
+    .price-value { font-size: 38px; }
+    .wrapper { padding: 16px 12px 48px; }
+    .panel { padding: 20px; }
+    header { margin-bottom: 24px; }
+  }
+
+  /* Reset button */
+  .reset-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: 'Sora', sans-serif;
+    font-size: 12px;
+    padding: 10px;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .reset-btn:hover { border-color: var(--muted); color: var(--text); }
+
+  /* Number input hide arrows */
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  input[type=number] { -moz-appearance: textfield; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">📦</div>
+      <div>
+        <div class="logo-text">Rate Card Calculator</div>
+        <div class="logo-sub">NAFED LOGISTICS PRICING</div>
+      </div>
+    </div>
+    <div class="badge">Live Calculator</div>
+  </header>
+
+  <div class="main-grid">
+
+    <!-- INPUT PANEL -->
+    <div class="panel">
+      <div class="panel-label">Input Parameters</div>
+
+      <div class="field">
+        <label>Weight (kg) — Manual Entry</label>
+        <input type="number" id="weightInput" placeholder="e.g. 10.4" min="0.01" max="18" step="0.01">
+        <div class="error-msg" id="weightError">Please enter a valid weight between 0.01 and 18 kg.</div>
+      </div>
+
+      <div class="field">
+        <label>Detected Weight Slab</label>
+        <div class="weight-display empty" id="slabDisplay">Enter weight above...</div>
+      </div>
+
+      <div class="field">
+        <label>Rate Type</label>
+        <div class="select-wrap">
+          <select id="rateType">
+            <option value="">— Select —</option>
+            <option value="Standard">Standard</option>
+            <option value="Express">Express</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Customer Type (Slab)</label>
+        <div class="select-wrap">
+          <select id="slabType">
+            <option value="">— Select —</option>
+            <option value="Slab 1">Slab 1 — Regular Customers</option>
+            <option value="Slab 2">Slab 2 — Mid Sized Customers</option>
+            <option value="Slab 3">Slab 3 — Bulk Customers</option>
+            <option value="Slab 4">Slab 4 — Special Rates</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Region</label>
+        <div class="select-wrap">
+          <select id="region">
+            <option value="">— Select —</option>
+            <option value="Local">Local</option>
+            <option value="Regional">Regional</option>
+            <option value="Meto to Metro">Metro to Metro</option>
+            <option value="ROI">ROI</option>
+            <option value="Special Locations">Special Locations</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="calc-btn" onclick="calculate()">Calculate Price →</button>
+      <button class="reset-btn" onclick="resetAll()">↺ Reset</button>
+    </div>
+
+    <!-- OUTPUT PANEL -->
+    <div class="output-panel">
+      <div class="panel-label">Output</div>
+
+      <div class="result-empty" id="resultEmpty">
+        <div class="icon">🧮</div>
+        <p>Fill in the inputs on the left and hit <strong>Calculate</strong> to see the pricing breakdown.</p>
+      </div>
+
+      <div class="result-content" id="resultContent">
+        <div class="price-display">
+          <div class="price-label">Final Price (excl. GST)</div>
+          <div class="price-value" id="priceDisplay"><span class="currency">₹</span><span id="priceNum">—</span></div>
+          <div class="price-gst" id="priceGst"></div>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-row">
+            <span class="detail-key">Weight Slab</span>
+            <span class="detail-val accent" id="outSlab">—</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Rate Type</span>
+            <span class="detail-val" id="outType">—</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Customer Slab</span>
+            <span class="detail-val" id="outCustomer">—</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Region</span>
+            <span class="detail-val" id="outRegion">—</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Entered Weight</span>
+            <span class="detail-val accent" id="outWeight">—</span>
+          </div>
+        </div>
+
+        <div class="slab-breakdown" id="slabBreakdown">
+          <div class="slab-title">Rate Breakdown</div>
+          <div id="breakdownRows"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ────────────────────────────────────────────
+// RATE DATA (from Rate Card sheet, raw values)
+// Structure: rates[rateType][slab][region] = {up05, up1, per05, perkg}
+// ────────────────────────────────────────────
+const rates = {
+  Standard: {
+    "Slab 1": {
+      Local:             { up05: 51,  up1: 76,  per05: 21, perkg: 18 },
+      Regional:          { up05: 64,  up1: 85,  per05: 23, perkg: 22 },
+      "Meto to Metro":   { up05: 76,  up1: 93,  per05: 24, perkg: 23 },
+      ROI:               { up05: 85,  up1: 102, per05: 25, perkg: 25 },
+      "Special Locations": { up05: 93, up1: 110, per05: 29, perkg: 27 },
+    },
+    "Slab 2": {
+      Local:             { up05: 42,  up1: 61,  per05: 20, perkg: 17 },
+      Regional:          { up05: 53,  up1: 70,  per05: 22, perkg: 21 },
+      "Meto to Metro":   { up05: 60,  up1: 80,  per05: 23, perkg: 23 },
+      ROI:               { up05: 68,  up1: 88,  per05: 24, perkg: 24 },
+      "Special Locations": { up05: 84, up1: 105, per05: 28, perkg: 25 },
+    },
+    "Slab 3": {
+      Local:             { up05: 35,  up1: 49,  per05: 19, perkg: 16 },
+      Regional:          { up05: 40,  up1: 56,  per05: 21, perkg: 19 },
+      "Meto to Metro":   { up05: 47,  up1: 65,  per05: 22, perkg: 21 },
+      ROI:               { up05: 51,  up1: 72,  per05: 22, perkg: 23 },
+      "Special Locations": { up05: 75, up1: 95,  per05: 28, perkg: 25 },
+    },
+    "Slab 4": {
+      Local:             { up05: 30,  up1: 40,  per05: 16, perkg: 15 },
+      Regional:          { up05: 32,  up1: 43,  per05: 18, perkg: 17 },
+      "Meto to Metro":   { up05: 37,  up1: 51,  per05: 20, perkg: 20 },
+      ROI:               { up05: 40,  up1: 58,  per05: 21, perkg: 21 },
+      "Special Locations": { up05: 60, up1: 80,  per05: 24, perkg: 23 },
+    },
+  },
+  Express: {
+    "Slab 1": {
+      Local:             { up05: 59,  up1: 82,  per05: 26, perkg: 25 },
+      Regional:          { up05: 69,  up1: 92,  per05: 28, perkg: 27 },
+      "Meto to Metro":   { up05: 81,  up1: 99,  per05: 30, perkg: 35 },
+      ROI:               { up05: 90,  up1: 107, per05: 34, perkg: 36 },
+      "Special Locations": { up05: 105, up1: 117, per05: 36, perkg: 37 },
+    },
+    "Slab 2": {
+      Local:             { up05: 46,  up1: 69,  per05: 23, perkg: 23 },
+      Regional:          { up05: 58,  up1: 76,  per05: 25, perkg: 25 },
+      "Meto to Metro":   { up05: 65,  up1: 86,  per05: 27, perkg: 32 },
+      ROI:               { up05: 70,  up1: 94,  per05: 30, perkg: 34 },
+      "Special Locations": { up05: 90, up1: 108, per05: 32, perkg: 35 },
+    },
+    "Slab 3": {
+      Local:             { up05: 38,  up1: 54,  per05: 22, perkg: 21 },
+      Regional:          { up05: 43,  up1: 59,  per05: 24, perkg: 24 },
+      "Meto to Metro":   { up05: 49,  up1: 68,  per05: 25, perkg: 31 },
+      ROI:               { up05: 53,  up1: 75,  per05: 28, perkg: 32 },
+      "Special Locations": { up05: 80, up1: 103, per05: 31, perkg: 33 },
+    },
+    "Slab 4": {
+      Local:             { up05: 35,  up1: 46,  per05: 20, perkg: 19 },
+      Regional:          { up05: 39,  up1: 52,  per05: 23, perkg: 23 },
+      "Meto to Metro":   { up05: 42,  up1: 60,  per05: 24, perkg: 29 },
+      ROI:               { up05: 49,  up1: 68,  per05: 27, perkg: 30 },
+      "Special Locations": { up05: 75, up1: 93,  per05: 29, perkg: 31 },
+    },
+  }
+};
+
+const slabLabels = {
+  "Slab 1": "FOR REGULAR CUSTOMERS",
+  "Slab 2": "FOR MID SIZED CUSTOMERS",
+  "Slab 3": "FOR BULK CUSTOMERS",
+  "Slab 4": "SPECIAL RATES",
+};
+
+// Weight → slab label
+function getWeightSlab(w) {
+  if (w <= 0.5) return "<=0.5";
+  if (w <= 1)   return "1";
+  if (w <= 1.5) return "1 to 1.5";
+  if (w <= 2)   return "1.5 to 2";
+  if (w <= 2.5) return "2 to 2.5";
+  if (w <= 3)   return "2.5 to 3";
+  if (w <= 3.5) return "3 to 3.5";
+  if (w <= 4)   return "3.5 to 4";
+  if (w <= 4.5) return "4 to 4.5";
+  if (w <= 5)   return "5";
+  if (w <= 6)   return "5 to 6";
+  if (w <= 7)   return "6 to 7";
+  if (w <= 8)   return "7 to 8";
+  if (w <= 9)   return "8 to 9";
+  if (w <= 10)  return "9 to 10";
+  if (w <= 11)  return "10 to 11";
+  if (w <= 12)  return "11 to 12";
+  if (w <= 13)  return "12 to 13";
+  if (w <= 14)  return "13 to 14";
+  if (w <= 15)  return "14 to 15";
+  if (w <= 16)  return "15 to 16";
+  if (w <= 17)  return "16 to 17";
+  if (w <= 18)  return "17 to 18";
+  return null;
+}
+
+// Compute final price
+function computePrice(w, r) {
+  // r = {up05, up1, per05, perkg}
+  if (w <= 0.5) return { price: r.up05, breakdown: [`Up to 0.5 kg → ₹${r.up05}`] };
+  if (w <= 1)   return { price: r.up1,  breakdown: [`Up to 1 kg → ₹${r.up1}`] };
+
+  if (w <= 5) {
+    // Base = 1 kg price, then per 0.5 kg increments
+    const base = r.up1;
+    const steps = Math.ceil((w - 1) / 0.5); // number of 0.5 kg slabs above 1
+    const extra = steps * r.per05;
+    const price = base + extra;
+    return {
+      price,
+      breakdown: [
+        `Base (1 kg) → ₹${base}`,
+        `+${steps} × 0.5 kg @ ₹${r.per05} = ₹${extra}`,
+        `Total → ₹${price.toFixed(2)}`
+      ]
+    };
+  }
+
+  // > 5 kg: base at 5 kg then per kg
+  const base1kg = r.up1;
+  const stepsTo5 = Math.ceil((5 - 1) / 0.5); // = 8
+  const priceat5 = base1kg + stepsTo5 * r.per05;
+  const kgsOver5 = Math.ceil(w - 5);
+  const extra = kgsOver5 * r.perkg;
+  const price = priceat5 + extra;
+  return {
+    price,
+    breakdown: [
+      `Base up to 5 kg → ₹${priceat5.toFixed(2)}`,
+      `+${kgsOver5} kg @ ₹${r.perkg}/kg = ₹${extra}`,
+      `Total → ₹${price.toFixed(2)}`
+    ]
+  };
+}
+
+// Live slab display
+document.getElementById('weightInput').addEventListener('input', function() {
+  const w = parseFloat(this.value);
+  const display = document.getElementById('slabDisplay');
+  const err = document.getElementById('weightError');
+
+  if (!this.value || isNaN(w)) {
+    display.textContent = 'Enter weight above...';
+    display.className = 'weight-display empty';
+    err.classList.remove('show');
+    return;
+  }
+  if (w <= 0 || w > 18) {
+    display.textContent = 'Weight must be 0.01 – 18 kg';
+    display.className = 'weight-display empty';
+    err.classList.add('show');
+    return;
+  }
+  err.classList.remove('show');
+  const slab = getWeightSlab(w);
+  display.textContent = slab;
+  display.className = 'weight-display';
+});
+
+function calculate() {
+  const wVal = document.getElementById('weightInput').value;
+  const rateType = document.getElementById('rateType').value;
+  const slabType = document.getElementById('slabType').value;
+  const region   = document.getElementById('region').value;
+
+  // Validate
+  const w = parseFloat(wVal);
+  if (!wVal || isNaN(w) || w <= 0 || w > 18) {
+    document.getElementById('weightError').classList.add('show');
+    document.getElementById('weightInput').focus();
+    return;
+  }
+  if (!rateType || !slabType || !region) {
+    alert('Please fill in all dropdown fields.');
+    return;
+  }
+
+  const r = rates[rateType][slabType][region];
+  const slab = getWeightSlab(w);
+  const { price, breakdown } = computePrice(w, r);
+  const priceWithGst = price * 1.18;
+
+  // Show result
+  document.getElementById('resultEmpty').style.display = 'none';
+  const rc = document.getElementById('resultContent');
+  rc.classList.remove('visible');
+  void rc.offsetWidth; // reflow
+  rc.classList.add('visible');
+
+  document.getElementById('priceNum').textContent = price.toFixed(2);
+  document.getElementById('priceGst').textContent = `Incl. 18% GST: ₹${priceWithGst.toFixed(2)}`;
+  document.getElementById('outSlab').textContent = slab;
+  document.getElementById('outType').textContent = rateType;
+  document.getElementById('outCustomer').textContent = slabLabels[slabType];
+  document.getElementById('outRegion').textContent = region;
+  document.getElementById('outWeight').textContent = `${w} kg`;
+
+  // Breakdown
+  const rows = document.getElementById('breakdownRows');
+  rows.innerHTML = breakdown.map(b => `
+    <div class="slab-row">
+      <span class="slab-row-label">${b.split('→')[0].trim()}</span>
+      <span class="slab-row-val">${b.includes('→') ? b.split('→')[1].trim() : ''}</span>
+    </div>
+  `).join('');
+}
+
+function resetAll() {
+  document.getElementById('weightInput').value = '';
+  document.getElementById('rateType').value = '';
+  document.getElementById('slabType').value = '';
+  document.getElementById('region').value = '';
+  document.getElementById('slabDisplay').textContent = 'Enter weight above...';
+  document.getElementById('slabDisplay').className = 'weight-display empty';
+  document.getElementById('weightError').classList.remove('show');
+  document.getElementById('resultEmpty').style.display = '';
+  document.getElementById('resultContent').classList.remove('visible');
+}
+
+// Allow Enter key to calculate
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') calculate();
+});
+</script>
+</body>
+</html>
